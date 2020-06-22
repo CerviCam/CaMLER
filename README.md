@@ -21,7 +21,7 @@ Instead of deploying the model in the client itself, we will create an applicati
     ```
   /Android/media/domain.applicationdomainname.applicationsubdomainname/applicationname/images/
     ```
-- Image filename should written in format of `yyyy-mm-dd hh:mm` and saved in format of `*.jpg`
+- Image filename should written in format of `yyyy-mm-dd hh:mm:ss` and saved in format of `*.jpg`
 - Canceled image should be removed from the media folder
 - Allowed dependencies,<br>
   - Android standard dependencies
