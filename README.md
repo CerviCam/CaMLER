@@ -37,7 +37,7 @@ Instead of deploying the model in the client itself, we will create an applicati
 ### Updates
 - **2020/06/22 13:01 WIB**<br>
   - If the user exit or destroy the application before the result is retrieved, bring back the Result Activity if user open up the application again and re-fetching the request.
-  - Remove the image file from the media folder if the result has retrieved.
+  - Remove the image file from the media folder if the result has been retrieved.
 
 ## Server
 To be discussed later.
