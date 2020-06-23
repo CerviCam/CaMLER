@@ -7,8 +7,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import id.cervicam.mobile.R
+import kotlinx.android.synthetic.main.activity_main.*
 
+// Own libraries
 import id.cervicam.mobile.helper.Utility
+import id.cervicam.mobile.fragments.Button
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,10 +19,16 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(findViewById(R.id.toolbar))
 
-        findViewById<FloatingActionButton>(R.id.fab).setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
+        val button: Button = Button.newInstance(
+            "OK",
+            clickable = true,
+            type = Button.ButtonType.OUTLINE,
+            onClick = {
+                println("Whatssuppp")
+            }
+        )
+
+        supportFragmentManager.beginTransaction().add(R.id.test, button).commit()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

@@ -1,8 +1,12 @@
 package id.cervicam.mobile.helper
 
+class Argument {
+
+}
+
 class Utility {
     companion object {
-        fun test(): String {
+        fun createArgs(): String {
             return "test"
         }
     }
