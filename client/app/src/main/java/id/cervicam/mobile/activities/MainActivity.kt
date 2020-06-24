@@ -1,5 +1,6 @@
 package id.cervicam.mobile.activities
 
+import android.content.Intent
 import android.os.Bundle
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
@@ -20,11 +21,12 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(findViewById(R.id.toolbar))
 
         val button: Button = Button.newInstance(
-            "OK",
+            "Open Camera",
             clickable = true,
-            type = Button.ButtonType.OUTLINE,
+            type = Button.ButtonType.FILLED,
             onClick = {
-                println("Whatssuppp")
+                val openCameraActivityIntent: Intent = Intent(this, CameraActivity::class.java)
+                startActivity(openCameraActivityIntent)
             }
         )
 

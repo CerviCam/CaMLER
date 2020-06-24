@@ -25,8 +25,15 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <FrameLayout
-        android:id="@+id/test"
+    <com.google.android.flexbox.FlexboxLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp" />
+        android:layout_height="wrap_content"
+        app:layout_flexGrow="1"
+        app:justifyContent="center"
+        app:alignItems="center">
+        <FrameLayout
+            android:id="@+id/test"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </com.google.android.flexbox.FlexboxLayout>
 </com.google.android.flexbox.FlexboxLayout>
