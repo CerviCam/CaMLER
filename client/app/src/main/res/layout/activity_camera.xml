@@ -6,22 +6,34 @@
     app:flexDirection="column"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <com.google.android.flexbox.FlexboxLayout
+        android:background="@drawable/shape_camera"
+        android:id="@+id/cameraLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_flexGrow="1"
-        android:background="@drawable/shape_camera"
-        android:clipToPadding="true"
         >
-        <TextureView
+        <androidx.camera.view.PreviewView
             android:id="@+id/cameraView"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
     </com.google.android.flexbox.FlexboxLayout>
     <com.google.android.flexbox.FlexboxLayout
         android:layout_width="match_parent"
-        android:layout_height="170dp">
+        android:layout_height="170dp"
+        app:flexDirection="row"
+        app:justifyContent="space_between"
+        app:alignItems="center"
+        >
+        <FrameLayout
+            android:id="@+id/galleryButtonFrame"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
         <FrameLayout
             android:id="@+id/takePictureButtonFrame"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <FrameLayout
+            android:id="@+id/flashButtonFrame"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </com.google.android.flexbox.FlexboxLayout>
