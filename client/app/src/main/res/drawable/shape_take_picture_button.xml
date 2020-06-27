@@ -3,14 +3,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:shape="rectangle">
+    android:shape="rectangle"
+    >
     <corners
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:bottomLeftRadius="70dp"
-        android:bottomRightRadius="70dp"
+        android:radius="1000dp"
         />
     <solid
-        android:color="#323232"
+        android:color="#ffffff"
         />
 </shape>

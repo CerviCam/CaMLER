@@ -83,7 +83,7 @@ class Button: Fragment() {
         }
 
         button.setOnClickListener {
-            if (clickable!!) {
+            if (clickable) {
                 onClick?.let { it1 -> it1() }
             }
         }
