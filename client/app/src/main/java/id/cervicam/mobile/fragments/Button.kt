@@ -7,6 +7,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.ColorInt
+import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import id.cervicam.mobile.R
@@ -24,11 +26,14 @@ class Button: Fragment() {
         private const val ARG_LABEL: String = "LABEL"
         private const val ARG_TYPE: String = "TYPE"
         private const val ARG_CLICKABLE: String = "CLICKABLE"
+        private const val ARG_COLOR: String = "COLOR"
 
         fun newInstance(
             label: String,
             type: ButtonType = ButtonType.FILLED,
+            @ColorInt color: Int = -1,
             clickable: Boolean = true,
+
             onClick: (() -> Unit)? = null
         ): Button {
             val button: Button = Button()
@@ -36,6 +41,7 @@ class Button: Fragment() {
             val args: Bundle = Bundle()
             args.putString(Button.ARG_LABEL, label)
             args.putString(Button.ARG_TYPE, type.name)
+            args.putInt(Button.ARG_COLOR, color)
             args.putBoolean(Button.ARG_CLICKABLE, clickable)
 
             button.arguments = args
@@ -75,6 +81,11 @@ class Button: Fragment() {
                 button.setTextColor(ContextCompat.getColor(context!!, R.color.colorAccent))
                 background.setStroke(0, Color.TRANSPARENT)
             }
+        }
+
+        @ColorInt val color: Int = arguments!!.getInt(ARG_COLOR)
+        if (color != -1) {
+            button.setTextColor(color)
         }
 
         if (!clickable!!) {

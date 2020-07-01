@@ -2,6 +2,7 @@ package id.cervicam.mobile.activities
 
 import android.Manifest
 import android.app.Activity
+import android.content.ContentResolver
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
@@ -9,6 +10,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.provider.OpenableColumns
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -34,6 +36,9 @@ class CameraActivity: AppCompatActivity() {
 
         private const val REQUEST_PERMISSION_CODE: Int = 101
         private const val IMAGE_GALLERY_REQUEST_CODE: Int = 2001
+        private const val IMAGE_PREVIEW_ACTIVITY_REQUEST_CODE = 90
+
+        private const val KEY_IMAGE_PATH: String = "IMAGE_PATH"
     }
 
     private var flashIsOn: Boolean = false
@@ -155,6 +160,7 @@ class CameraActivity: AppCompatActivity() {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     Toast.makeText(this@CameraActivity, "Saved", Toast.LENGTH_LONG).show()
                     val path: String = "${Utility.getOutputDirectory(this@CameraActivity, resources).path}/images/${fileName}"
+                    Utility.compressImage(path, 25)
                     lookPreview(path)
                 }
 
@@ -168,34 +174,30 @@ class CameraActivity: AppCompatActivity() {
 
     private fun lookPreview(path: String) {
         val openImagePreviewIntent = Intent(this, ImagePreviewActivity::class.java)
-        openImagePreviewIntent.putExtra(ImagePreviewActivity.ARG_IMAGE_URI, path)
-        startActivity(openImagePreviewIntent)
-    }
-
-    private fun getPath(uri: Uri): String? {
-        val result: String
-        val cursor: Cursor? = this.contentResolver?.query(uri, null, null, null, null)
-        if (cursor == null) { // Source is Dropbox or other similar local file path
-            result = uri.path.toString()
-        } else {
-            cursor.moveToFirst()
-            val idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA)
-            result = cursor.getString(idx)
-            cursor.close()
-        }
-        return result
+        openImagePreviewIntent.putExtra(ImagePreviewActivity.KEY_IMAGE_PATH, path)
+        startActivityForResult(openImagePreviewIntent, IMAGE_PREVIEW_ACTIVITY_REQUEST_CODE)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode != Activity.RESULT_OK) return
 
         if (requestCode == IMAGE_GALLERY_REQUEST_CODE) {
+            if (resultCode != Activity.RESULT_OK) return
+
             val imageUri: Uri = data!!.data!! as Uri
-//            println(this.let { Utility.getUriRealPath(it, imageUri) })
-//            println(getPath(imageUri))
-//            println("=====================================================")
-            Utility.getUriRealPath(this, imageUri)?.let { lookPreview(it) }
+            Utility.getFile(this, imageUri)?.path?.let { lookPreview(it) }
+        } else if (requestCode == IMAGE_PREVIEW_ACTIVITY_REQUEST_CODE) {
+            val path: String = data!!.getStringExtra(ImagePreviewActivity.KEY_IMAGE_PATH)!!
+            if (resultCode == Activity.RESULT_CANCELED) {
+                if (path.contains("${Utility.getOutputDirectory(this@CameraActivity, resources).path}/images")) {
+                    File(path).delete()
+                }
+            } else if (resultCode == Activity.RESULT_OK) {
+                val returned = Intent()
+                returned.putExtra(KEY_IMAGE_PATH, path)
+                setResult(Activity.RESULT_OK, returned)
+                finish()
+            }
         }
     }
 

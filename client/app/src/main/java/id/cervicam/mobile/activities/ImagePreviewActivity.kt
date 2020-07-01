@@ -1,11 +1,14 @@
 package id.cervicam.mobile.activities
 
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
 import android.os.AsyncTask
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.squareup.picasso.Picasso
 import id.cervicam.mobile.R
 import id.cervicam.mobile.fragments.Button
@@ -16,7 +19,7 @@ import java.io.File
 
 class ImagePreviewActivity: AppCompatActivity() {
     companion object {
-        public const val ARG_IMAGE_URI = "IMAGE_URI"
+        public const val KEY_IMAGE_PATH = "IMAGE_URI"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,10 +29,18 @@ class ImagePreviewActivity: AppCompatActivity() {
         supportActionBar?.hide()
         setContentView(R.layout.activity_image_preview)
 
+        val imagePath: String = intent.getStringExtra(KEY_IMAGE_PATH)!!
+
+        // For sending back to the activity calls this activity
+        val returned = Intent()
+        returned.putExtra(KEY_IMAGE_PATH, imagePath)
+
         val prevButton: Button = Button.newInstance(
             "Ulangi",
+            type = Button.ButtonType.CLEAN,
+            color = ContextCompat.getColor(this, R.color.colorWhite),
             onClick = {
-                setResult(Activity.RESULT_CANCELED)
+                setResult(Activity.RESULT_CANCELED, returned)
                 finish()
             }
         )
@@ -37,7 +48,7 @@ class ImagePreviewActivity: AppCompatActivity() {
         val nextButton: Button = Button.newInstance(
             "Lanjut",
             onClick = {
-                setResult(Activity.RESULT_OK)
+                setResult(Activity.RESULT_OK, returned)
                 finish()
             }
         )
@@ -48,39 +59,19 @@ class ImagePreviewActivity: AppCompatActivity() {
             ?.replace(R.id.nextButtonView, nextButton)
             ?.commit()
 
-        val imageUri: String = intent.getStringExtra(ARG_IMAGE_URI)!!
-        println("----------------------------------------------------------")
-        print(imageUri)
-        print(" ")
-        println(File(imageUri).exists())
-
-//        object : AsyncTask<String?, Void?, Void?>() {
-//            protected fun doInBackground(vararg params: String): Void? {
-//                val path = params[0]
-//                val resizedBitmap: Bitmap = ImageUtils.getResizedBitmap(200, 200, PATH_TO_IMAGE)
-//                this.runOnUiThread(Runnable { imageView.setImageBitmap(resizedBitmap) })
-//                return null
-//            }
-//        }.execute(imageLoadPath)
-
-        progressBar.visibility = View.VISIBLE
-        val picasso = Picasso.Builder(this@ImagePreviewActivity)
-            .listener { picasso, uri, exception ->
-                println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-                exception.printStackTrace()
-                println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-                //Here your log
-            }
-            .build()
-        picasso.load("file://$imageUri").config(Bitmap.Config.RGB_565).into(imageView, object: com.squareup.picasso.Callback {
+        Picasso.with(this)
+            .load("file://$imagePath")
+            .config(Bitmap.Config.RGB_565)
+            .into(imageView, object: com.squareup.picasso.Callback {
             override fun onSuccess() {
-                println("success")
-                progressBar.visibility = View.GONE
+                progressBarContainer.visibility = View.GONE
+                imageContainer.visibility = View.VISIBLE
             }
 
             override fun onError() {
-                println("error")
-                progressBar.visibility = View.GONE
+                setResult(Activity.RESULT_CANCELED, returned)
+                finish()
+                Toast.makeText(this@ImagePreviewActivity, "Unable to show the image", Toast.LENGTH_LONG)
             }
         })
     }
