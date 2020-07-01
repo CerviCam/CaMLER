@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         val button: Button = Button.newInstance(
-            "Open Camera",
+            getString(R.string.activity_main_opencamera),
             clickable = true,
             type = Button.ButtonType.FILLED,
             onClick = {

@@ -36,7 +36,7 @@ class ImagePreviewActivity: AppCompatActivity() {
         returned.putExtra(KEY_IMAGE_PATH, imagePath)
 
         val prevButton: Button = Button.newInstance(
-            "Ulangi",
+            getString(R.string.activity_imagepreview_previous),
             type = Button.ButtonType.CLEAN,
             color = ContextCompat.getColor(this, R.color.colorWhite),
             onClick = {
@@ -46,7 +46,7 @@ class ImagePreviewActivity: AppCompatActivity() {
         )
 
         val nextButton: Button = Button.newInstance(
-            "Lanjut",
+            getString(R.string.activity_imagepreview_next),
             onClick = {
                 setResult(Activity.RESULT_OK, returned)
                 finish()
@@ -54,10 +54,10 @@ class ImagePreviewActivity: AppCompatActivity() {
         )
 
         supportFragmentManager
-            ?.beginTransaction()
-            ?.replace(R.id.prevButtonView, prevButton)
-            ?.replace(R.id.nextButtonView, nextButton)
-            ?.commit()
+            .beginTransaction()
+            .replace(R.id.prevButtonView, prevButton)
+            .replace(R.id.nextButtonView, nextButton)
+            .commit()
 
         Picasso.with(this)
             .load("file://$imagePath")
