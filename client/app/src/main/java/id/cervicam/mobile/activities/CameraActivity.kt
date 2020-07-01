@@ -147,12 +147,10 @@ class CameraActivity : AppCompatActivity() {
         val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val fileName: String = "${dateTimeFormatter.format(currentDateTime)}.jpg"
 
-        val imageFolder =
-            File("${Utility.getOutputDirectory(this@CameraActivity, resources).path}/images")
+        val imageFolder = File("${cacheDir.path}/images")
         if (!imageFolder.exists()) {
             imageFolder.mkdirs()
         }
-
         val image = File(imageFolder, fileName)
         val outputOptions = ImageCapture.OutputFileOptions.Builder(image).build()
 
@@ -161,12 +159,7 @@ class CameraActivity : AppCompatActivity() {
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                    Toast.makeText(this@CameraActivity, "Saved", Toast.LENGTH_LONG).show()
-                    val path = "${Utility.getOutputDirectory(
-                        this@CameraActivity,
-                        resources
-                    ).path}/images/${fileName}"
-                    Utility.compressImage(path, 25)
+                    val path = image.path
                     lookPreview(path)
                 }
 
@@ -199,18 +192,16 @@ class CameraActivity : AppCompatActivity() {
         } else if (requestCode == IMAGE_PREVIEW_ACTIVITY_REQUEST_CODE) {
             val path: String = data!!.getStringExtra(ImagePreviewActivity.KEY_IMAGE_PATH)!!
             if (resultCode == Activity.RESULT_CANCELED) {
-                if (path.contains(
-                        "${Utility.getOutputDirectory(
-                            this@CameraActivity,
-                            resources
-                        ).path}/images"
-                    )
-                ) {
+                if (path.contains("cache")) {
                     File(path).delete()
                 }
             } else if (resultCode == Activity.RESULT_OK) {
                 val returned = Intent()
-                returned.putExtra(KEY_IMAGE_PATH, path)
+                val longLifeImage = File("${Utility.getOutputDirectory(this@CameraActivity, resources).path}/images/${Utility.getBasename(path)}")
+                File(path).copyTo(longLifeImage)
+                Toast.makeText(this@CameraActivity, "Saved", Toast.LENGTH_LONG).show()
+                
+                returned.putExtra(KEY_IMAGE_PATH, longLifeImage.path)
                 setResult(Activity.RESULT_OK, returned)
                 finish()
             }
