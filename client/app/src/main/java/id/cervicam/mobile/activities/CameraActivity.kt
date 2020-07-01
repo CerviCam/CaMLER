@@ -2,15 +2,12 @@ package id.cervicam.mobile.activities
 
 import android.Manifest
 import android.app.Activity
-import android.content.ContentResolver
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.database.Cursor
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.provider.OpenableColumns
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -19,14 +16,14 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import id.cervicam.mobile.R
-import kotlinx.android.synthetic.main.activity_camera.*
 import id.cervicam.mobile.helper.Utility
+import kotlinx.android.synthetic.main.activity_camera.*
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 
-class CameraActivity: AppCompatActivity() {
+class CameraActivity : AppCompatActivity() {
     companion object {
         private val PERMISSIONS: Array<String> = arrayOf(
             Manifest.permission.CAMERA,
@@ -34,11 +31,11 @@ class CameraActivity: AppCompatActivity() {
             Manifest.permission.READ_EXTERNAL_STORAGE
         )
 
-        private const val REQUEST_PERMISSION_CODE: Int = 101
-        private const val IMAGE_GALLERY_REQUEST_CODE: Int = 2001
+        private const val REQUEST_PERMISSION_CODE = 101
+        private const val IMAGE_GALLERY_REQUEST_CODE = 2001
         private const val IMAGE_PREVIEW_ACTIVITY_REQUEST_CODE = 90
 
-        private const val KEY_IMAGE_PATH: String = "IMAGE_PATH"
+        private const val KEY_IMAGE_PATH = "IMAGE_PATH"
     }
 
     private var flashIsOn: Boolean = false
@@ -52,7 +49,7 @@ class CameraActivity: AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Utility.hideStatusBar(window)
-        Utility.setStatusBarColor(window,this@CameraActivity, R.color.colorBlack)
+        Utility.setStatusBarColor(window, this@CameraActivity, R.color.colorBlack)
         supportActionBar?.hide()
         setContentView(R.layout.activity_camera)
         setListeners()
@@ -90,15 +87,18 @@ class CameraActivity: AppCompatActivity() {
     private fun hasCameraPermission(): Boolean {
         return PERMISSIONS.fold(
             true,
-            {allPermissions, permission -> allPermissions && this.let {
-                ActivityCompat.checkSelfPermission(
-                    it, permission)
-            } == PackageManager.PERMISSION_GRANTED}
+            { allPermissions, permission ->
+                allPermissions && this.let {
+                    ActivityCompat.checkSelfPermission(
+                        it, permission
+                    )
+                } == PackageManager.PERMISSION_GRANTED
+            }
         )
     }
 
     private fun openCamera() {
-        val cameraProviderFuture = this.let { ProcessCameraProvider.getInstance(it) }
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         cameraProviderFuture!!.addListener(Runnable {
             // Used to bind life-cycle of camera
@@ -111,7 +111,8 @@ class CameraActivity: AppCompatActivity() {
             imageCapture = ImageCapture.Builder().build()
 
             // Select back camera
-            selectedCamera = CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
+            selectedCamera =
+                CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
 
             setCameraCycles()
         }, ContextCompat.getMainExecutor(this))
@@ -128,7 +129,8 @@ class CameraActivity: AppCompatActivity() {
 
         try {
             cameraProvider!!.unbindAll()
-            camera = cameraProvider!!.bindToLifecycle(this, selectedCamera!!, imagePreview, imageCapture)
+            camera =
+                cameraProvider!!.bindToLifecycle(this, selectedCamera!!, imagePreview, imageCapture)
             imagePreview?.setSurfaceProvider(cameraView.createSurfaceProvider(camera?.cameraInfo))
         } catch (e: Exception) {
             Toast.makeText(this, "Something is wrong", Toast.LENGTH_LONG)
@@ -141,16 +143,17 @@ class CameraActivity: AppCompatActivity() {
         // Don't take a picture if imageCapture have not been initialized
         if (imageCapture == null) return
 
-        val currentDateTime: LocalDateTime = LocalDateTime.now()
-        val dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        val currentDateTime = LocalDateTime.now()
+        val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
         val fileName: String = "${dateTimeFormatter.format(currentDateTime)}.jpg"
 
-        val imageFolder: File = File("${Utility.getOutputDirectory(this@CameraActivity, resources).path}/images")
+        val imageFolder =
+            File("${Utility.getOutputDirectory(this@CameraActivity, resources).path}/images")
         if (!imageFolder.exists()) {
             imageFolder.mkdirs()
         }
 
-        val image: File = File(imageFolder, fileName)
+        val image = File(imageFolder, fileName)
         val outputOptions = ImageCapture.OutputFileOptions.Builder(image).build()
 
         imageCapture!!.takePicture(
@@ -159,13 +162,20 @@ class CameraActivity: AppCompatActivity() {
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     Toast.makeText(this@CameraActivity, "Saved", Toast.LENGTH_LONG).show()
-                    val path: String = "${Utility.getOutputDirectory(this@CameraActivity, resources).path}/images/${fileName}"
+                    val path = "${Utility.getOutputDirectory(
+                        this@CameraActivity,
+                        resources
+                    ).path}/images/${fileName}"
                     Utility.compressImage(path, 25)
                     lookPreview(path)
                 }
 
                 override fun onError(exception: ImageCaptureException) {
-                    Toast.makeText(this@CameraActivity, "Failed to take a picture, try again", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this@CameraActivity,
+                        "Failed to take a picture, try again",
+                        Toast.LENGTH_LONG
+                    ).show()
                     exception.printStackTrace()
                 }
             }
@@ -189,7 +199,13 @@ class CameraActivity: AppCompatActivity() {
         } else if (requestCode == IMAGE_PREVIEW_ACTIVITY_REQUEST_CODE) {
             val path: String = data!!.getStringExtra(ImagePreviewActivity.KEY_IMAGE_PATH)!!
             if (resultCode == Activity.RESULT_CANCELED) {
-                if (path.contains("${Utility.getOutputDirectory(this@CameraActivity, resources).path}/images")) {
+                if (path.contains(
+                        "${Utility.getOutputDirectory(
+                            this@CameraActivity,
+                            resources
+                        ).path}/images"
+                    )
+                ) {
                     File(path).delete()
                 }
             } else if (resultCode == Activity.RESULT_OK) {
@@ -208,7 +224,11 @@ class CameraActivity: AppCompatActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_PERMISSION_CODE && grantResults[0] == PackageManager.PERMISSION_DENIED) {
-            Toast.makeText(this@CameraActivity, "Sorry, camera permission is needed", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this@CameraActivity,
+                "Sorry, camera permission is needed",
+                Toast.LENGTH_LONG
+            ).show()
         } else {
             openCamera()
         }

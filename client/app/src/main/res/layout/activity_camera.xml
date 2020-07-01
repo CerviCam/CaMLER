@@ -27,7 +27,7 @@
         app:justifyContent="space_between"
         app:alignItems="center"
         >
-        <id.cervicam.mobile.layout.ScaledImageView
+        <ImageView
             android:id="@+id/galleryButton"
             android:background="@drawable/ic_gallery"
             android:layout_width="40dp"
@@ -39,7 +39,7 @@
             android:layout_height="60dp"
             android:background="@drawable/shape_take_picture_button"
             />
-        <id.cervicam.mobile.layout.ScaledImageView
+        <ImageView
             android:id="@+id/flashButton"
             android:background="@drawable/ic_flash"
             android:layout_width="40dp"

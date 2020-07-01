@@ -1,6 +1,5 @@
 package id.cervicam.mobile.fragments
 
-import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -8,14 +7,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.ColorInt
-import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import id.cervicam.mobile.R
 import kotlinx.android.synthetic.main.fragment_button.*
 
 
-class Button: Fragment() {
+class Button : Fragment() {
     // Enums
     enum class ButtonType {
         FILLED, OUTLINE, CLEAN
@@ -72,11 +70,13 @@ class Button: Fragment() {
                 background.setColor(ContextCompat.getColor(context!!, R.color.colorAccent))
                 button.setTextColor(ContextCompat.getColor(context!!, R.color.colorWhite))
                 background.setStroke(0, Color.TRANSPARENT)
-            } ButtonType.OUTLINE.name -> {
+            }
+            ButtonType.OUTLINE.name -> {
                 background.setColor(Color.TRANSPARENT)
                 button.setTextColor(ContextCompat.getColor(context!!, R.color.colorAccent))
                 background.setStroke(2, ContextCompat.getColor(context!!, R.color.colorAccent))
-            } ButtonType.CLEAN.name -> {
+            }
+            ButtonType.CLEAN.name -> {
                 background.setColor(Color.TRANSPARENT)
                 button.setTextColor(ContextCompat.getColor(context!!, R.color.colorAccent))
                 background.setStroke(0, Color.TRANSPARENT)
