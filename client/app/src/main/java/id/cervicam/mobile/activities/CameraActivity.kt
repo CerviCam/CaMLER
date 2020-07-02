@@ -200,7 +200,7 @@ class CameraActivity : AppCompatActivity() {
                 val longLifeImage = File("${Utility.getOutputDirectory(this@CameraActivity, resources).path}/images/${Utility.getBasename(path)}")
                 File(path).copyTo(longLifeImage)
                 Toast.makeText(this@CameraActivity, "Saved", Toast.LENGTH_LONG).show()
-                
+
                 returned.putExtra(KEY_IMAGE_PATH, longLifeImage.path)
                 setResult(Activity.RESULT_OK, returned)
                 finish()

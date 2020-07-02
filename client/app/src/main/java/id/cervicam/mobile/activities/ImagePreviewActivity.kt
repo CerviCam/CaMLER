@@ -30,7 +30,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 
         val imagePath: String = intent.getStringExtra(KEY_IMAGE_PATH)!!
 
-        // Returned data
+        // A returned data
         val returned = Intent()
         returned.putExtra(KEY_IMAGE_PATH, imagePath)
 
