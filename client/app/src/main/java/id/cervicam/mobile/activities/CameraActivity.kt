@@ -35,7 +35,7 @@ class CameraActivity : AppCompatActivity() {
         private const val IMAGE_GALLERY_REQUEST_CODE = 2001
         private const val IMAGE_PREVIEW_ACTIVITY_REQUEST_CODE = 90
 
-        private const val KEY_IMAGE_PATH = "IMAGE_PATH"
+        const val KEY_IMAGE_PATH = "IMAGE_PATH"
     }
 
     private var flashIsOn: Boolean = false

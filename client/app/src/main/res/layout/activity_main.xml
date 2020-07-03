@@ -31,9 +31,18 @@
         android:layout_height="wrap_content"
         app:layout_flexGrow="1"
         app:justifyContent="center"
-        app:alignItems="center">
+        app:alignItems="center"
+        app:flexDirection="column">
         <FrameLayout
-            android:id="@+id/test"
+            android:id="@+id/openCameraButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_marginTop="12dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <FrameLayout
+            android:id="@+id/showResultButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </com.google.android.flexbox.FlexboxLayout>

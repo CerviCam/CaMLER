@@ -36,6 +36,8 @@ class ImagePreviewActivity : AppCompatActivity() {
 
         var image = File(imagePath)
 
+        println(image.path)
+        println(image.exists())
         // Compress image if the size is more than 300kb
         if (image.length() >= 300 * 1000) {
             val rawImage = image

@@ -6,4 +6,5 @@
     <string name="activity_imagepreview_next">Lanjut</string>
     <string name="activity_result_result">Hasil</string>
     <string name="activity_result_uploadstatus">Status</string>
+    <string name="activity_main_resultbutton">Hasil klasifikasi</string>
 </resources>

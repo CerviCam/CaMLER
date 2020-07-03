@@ -1,6 +1,7 @@
 package id.cervicam.mobile.activities
 
 // Own libraries
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
@@ -11,22 +12,59 @@ import id.cervicam.mobile.fragments.Button
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
+    companion object {
+        const val OPEN_CAMERA_REQUEST_CODE = 101
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        val button = Button.newInstance(
+        val openCameraButton = Button.newInstance(
             getString(R.string.activity_main_opencamera),
             clickable = true,
             type = Button.ButtonType.FILLED,
             onClick = {
-                val openCameraActivityIntent: Intent = Intent(this, CameraActivity::class.java)
-                startActivity(openCameraActivityIntent)
+                val openCameraActivityIntent = Intent(this, CameraActivity::class.java)
+                startActivityForResult(openCameraActivityIntent, OPEN_CAMERA_REQUEST_CODE)
             }
         )
 
-        supportFragmentManager.beginTransaction().add(R.id.test, button).commit()
+        val showFirstResultButton = Button.newInstance(
+            getString(R.string.activity_main_resultbutton),
+            type = Button.ButtonType.OUTLINE,
+            onClick = {
+                openResultActivity("1")
+            }
+        )
+
+        supportFragmentManager
+            .beginTransaction()
+            .replace(R.id.openCameraButton, openCameraButton)
+            .replace(R.id.showResultButton, showFirstResultButton)
+            .commit()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == OPEN_CAMERA_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                val imagePath: String = data!!.getStringExtra(CameraActivity.KEY_IMAGE_PATH) as String
+                sendImageAndOpenResultActivity(imagePath)
+            }
+        }
+    }
+
+    private fun openResultActivity(requestId: String) {
+        val showResultActivity = Intent(this, ResultActivity::class.java)
+        showResultActivity.putExtra(ResultActivity.KEY_REQUEST_ID, requestId)
+        startActivity(showResultActivity)
+    }
+
+    private fun sendImageAndOpenResultActivity(imagePath: String) {
+        openResultActivity("1") // Dummy request id
+//        TODO("Send image to server over HTTP Request and open result activity")
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

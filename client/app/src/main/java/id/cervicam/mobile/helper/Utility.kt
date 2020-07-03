@@ -11,6 +11,10 @@ import android.view.Window
 import android.view.WindowManager
 import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
+import com.google.gson.JsonArray
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import id.cervicam.mobile.R
 import id.cervicam.mobile.activities.CameraActivity
 import java.io.*
@@ -87,6 +91,43 @@ class Utility {
             } finally {
                 outStream?.close()
             }
+        }
+
+        fun parseJSON(json: String?): HashMap<String, Any> {
+            val `object`: JsonObject = JsonParser.parseString(json) as JsonObject
+            val set: Set<Map.Entry<String, JsonElement>> =
+                `object`.entrySet()
+            val iterator: Iterator<Map.Entry<String, JsonElement>> =
+                set.iterator()
+            val map = HashMap<String, Any>()
+            while (iterator.hasNext()) {
+                val entry: Map.Entry<String, JsonElement> =
+                    iterator.next()
+                val key = entry.key
+                val value: JsonElement = entry.value
+                if (null != value) {
+                    if (!value.isJsonPrimitive) {
+                        if (value.isJsonObject) {
+                            map[key] = parseJSON(value.toString())
+                        } else if (value.isJsonArray && value.toString().contains(":")) {
+                            val list: MutableList<HashMap<String, Any>> =
+                                ArrayList()
+                            val array: JsonArray = value.asJsonArray
+                            if (null != array) {
+                                for (element in array) {
+                                    list.add(parseJSON(element.toString()))
+                                }
+                                map[key] = list
+                            }
+                        } else if (value.isJsonArray && !value.toString().contains(":")) {
+                            map[key] = value.asJsonArray
+                        }
+                    } else {
+                        map[key] = value.asString
+                    }
+                }
+            }
+            return map
         }
     }
 }

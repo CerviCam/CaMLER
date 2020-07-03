@@ -5,4 +5,7 @@
     <string name="activity_main_opencamera">Open Camera</string>
     <string name="activity_imagepreview_previous">Retake</string>
     <string name="activity_imagepreview_next">Next</string>
+    <string name="activity_result_result">Result</string>
+    <string name="activity_result_uploadstatus">Status</string>
+    <string name="activity_main_resultbutton">Classification Result</string>
 </resources>
