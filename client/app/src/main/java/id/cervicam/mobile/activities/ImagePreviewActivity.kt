@@ -42,7 +42,7 @@ class ImagePreviewActivity : AppCompatActivity() {
 
         // A returned data
         val returned = Intent()
-        returned.putExtra(KEY_IMAGE_PATH, image.path)
+        returned.putExtra(KEY_IMAGE_PATH, imagePath)
 
         val prevButton = Button.newInstance(
             getString(R.string.activity_imagepreview_previous),

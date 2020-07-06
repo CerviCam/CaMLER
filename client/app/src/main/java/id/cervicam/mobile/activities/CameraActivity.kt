@@ -144,7 +144,10 @@ class CameraActivity : AppCompatActivity() {
             Locale.US
         ).format(System.currentTimeMillis())}.jpg"
 
-        val imageFolder = File("${cacheDir.path}/images")
+        val imageFolder = File("${Utility.getOutputDirectory(
+            this@CameraActivity,
+            resources
+        ).path}/images")
         if (!imageFolder.exists()) {
             imageFolder.mkdirs()
         }
@@ -189,23 +192,9 @@ class CameraActivity : AppCompatActivity() {
         } else if (requestCode == IMAGE_PREVIEW_ACTIVITY_REQUEST_CODE) {
             val path: String = data!!.getStringExtra(ImagePreviewActivity.KEY_IMAGE_PATH)!!
             if (resultCode == Activity.RESULT_CANCELED) {
-                if (path.contains("cache")) {
+                if (path.contains("Android/media")) {
                     File(path).delete()
                 }
-            } else if (resultCode == Activity.RESULT_OK) {
-                val returned = Intent()
-                val longLifeImage = File(
-                    "${Utility.getOutputDirectory(
-                        this@CameraActivity,
-                        resources
-                    ).path}/images/${Utility.getBasename(path)}"
-                )
-                File(path).copyTo(longLifeImage)
-                Toast.makeText(this@CameraActivity, "Saved", Toast.LENGTH_LONG).show()
-
-                returned.putExtra(KEY_IMAGE_PATH, longLifeImage.path)
-                setResult(Activity.RESULT_OK, returned)
-                finish()
             }
         }
     }
