@@ -18,7 +18,7 @@ import java.io.File
 
 class ImagePreviewActivity : AppCompatActivity() {
     companion object {
-        public const val KEY_IMAGE_PATH = "IMAGE_URI"
+        const val KEY_IMAGE_PATH = "IMAGE_URI"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,14 +30,8 @@ class ImagePreviewActivity : AppCompatActivity() {
 
         val imagePath: String = intent.getStringExtra(KEY_IMAGE_PATH)!!
 
-        // A returned data
-        val returned = Intent()
-        returned.putExtra(KEY_IMAGE_PATH, imagePath)
-
         var image = File(imagePath)
 
-        println(image.path)
-        println(image.exists())
         // Compress image if the size is more than 300kb
         if (image.length() >= 300 * 1000) {
             val rawImage = image
@@ -45,6 +39,10 @@ class ImagePreviewActivity : AppCompatActivity() {
             rawImage.copyTo(image)
             Utility.compressImage(image.path, 25)
         }
+
+        // A returned data
+        val returned = Intent()
+        returned.putExtra(KEY_IMAGE_PATH, image.path)
 
         val prevButton = Button.newInstance(
             getString(R.string.activity_imagepreview_previous),
@@ -87,7 +85,7 @@ class ImagePreviewActivity : AppCompatActivity() {
                         this@ImagePreviewActivity,
                         "Unable to show the image",
                         Toast.LENGTH_LONG
-                    )
+                    ).show()
                     finish()
                 }
             })

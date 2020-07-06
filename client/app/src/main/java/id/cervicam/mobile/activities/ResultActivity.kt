@@ -24,7 +24,7 @@ class ResultActivity : AppCompatActivity() {
         const val OPEN_CAMERA_REQUEST_CODE = 201
     }
 
-    override fun onCreate(savedInstanceState: Bundle?): Unit {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_result)
 
@@ -39,7 +39,7 @@ class ResultActivity : AppCompatActivity() {
                 val openCameraActivityIntent = Intent(this, CameraActivity::class.java)
                 startActivityForResult(
                     openCameraActivityIntent,
-                    ResultActivity.OPEN_CAMERA_REQUEST_CODE
+                    OPEN_CAMERA_REQUEST_CODE
                 )
             }
         )
@@ -54,7 +54,7 @@ class ResultActivity : AppCompatActivity() {
         launch(Dispatchers.Default) {
             val response: HttpResponse = MainService.fetchClassificationResult(requestId)
             if (response.status == HttpStatusCode.OK) {
-                val responseBody = Utility.parseJSON(response.readText())
+                Utility.parseJSON(response.readText())
 //                setResult(responseBody)
             } else {
                 TODO("Implement handler for status code != 200")

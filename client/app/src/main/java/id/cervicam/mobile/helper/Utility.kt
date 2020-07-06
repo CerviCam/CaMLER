@@ -33,10 +33,10 @@ class Utility {
         }
 
         fun getOutputDirectory(context: CameraActivity, resources: Resources): File {
-            val mediaDir = context!!.externalMediaDirs.firstOrNull()?.let {
+            val mediaDir = context.externalMediaDirs.firstOrNull()?.let {
                 File(it, resources.getString(R.string.app_name)).apply { mkdirs() } }
 
-            return if (mediaDir != null && mediaDir.exists()) mediaDir else context!!.filesDir
+            return if (mediaDir != null && mediaDir.exists()) mediaDir else context.filesDir
         }
 
         fun getBasename(path: String): String {
@@ -72,7 +72,7 @@ class Utility {
             path: String,
             quality: Int,
             extension: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG
-        ): Unit {
+        ) {
             val file = File(path)
             if (!file.exists()) return
 
@@ -105,26 +105,22 @@ class Utility {
                     iterator.next()
                 val key = entry.key
                 val value: JsonElement = entry.value
-                if (null != value) {
-                    if (!value.isJsonPrimitive) {
-                        if (value.isJsonObject) {
-                            map[key] = parseJSON(value.toString())
-                        } else if (value.isJsonArray && value.toString().contains(":")) {
-                            val list: MutableList<HashMap<String, Any>> =
-                                ArrayList()
-                            val array: JsonArray = value.asJsonArray
-                            if (null != array) {
-                                for (element in array) {
-                                    list.add(parseJSON(element.toString()))
-                                }
-                                map[key] = list
-                            }
-                        } else if (value.isJsonArray && !value.toString().contains(":")) {
-                            map[key] = value.asJsonArray
+                if (!value.isJsonPrimitive) {
+                    if (value.isJsonObject) {
+                        map[key] = parseJSON(value.toString())
+                    } else if (value.isJsonArray && value.toString().contains(":")) {
+                        val list: MutableList<HashMap<String, Any>> =
+                            ArrayList()
+                        val array: JsonArray = value.asJsonArray
+                        for (element in array) {
+                            list.add(parseJSON(element.toString()))
                         }
-                    } else {
-                        map[key] = value.asString
+                        map[key] = list
+                    } else if (value.isJsonArray && !value.toString().contains(":")) {
+                        map[key] = value.asJsonArray
                     }
+                } else {
+                    map[key] = value.asString
                 }
             }
             return map

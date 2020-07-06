@@ -5,11 +5,9 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -19,8 +17,8 @@ import id.cervicam.mobile.R
 import id.cervicam.mobile.helper.Utility
 import kotlinx.android.synthetic.main.activity_camera.*
 import java.io.File
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class CameraActivity : AppCompatActivity() {
@@ -45,7 +43,6 @@ class CameraActivity : AppCompatActivity() {
     private var imagePreview: Preview? = null
     private var imageCapture: ImageCapture? = null
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Utility.hideStatusBar(window)
@@ -61,7 +58,6 @@ class CameraActivity : AppCompatActivity() {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun setListeners() {
         galleryButton.setOnClickListener {
             openGallery()
@@ -76,7 +72,7 @@ class CameraActivity : AppCompatActivity() {
                 flashIsOn = !flashIsOn
                 camera!!.cameraControl.enableTorch(flashIsOn)
             } else {
-                Toast.makeText(this, "Unable to use flash", Toast.LENGTH_LONG)
+                Toast.makeText(this, "Unable to use flash", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -100,9 +96,9 @@ class CameraActivity : AppCompatActivity() {
     private fun openCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
-        cameraProviderFuture!!.addListener(Runnable {
+        cameraProviderFuture.addListener(Runnable {
             // Used to bind life-cycle of camera
-            cameraProvider = cameraProviderFuture!!.get()
+            cameraProvider = cameraProviderFuture.get()
 
             // Set camera preview
             imagePreview = Preview.Builder().build()
@@ -133,19 +129,20 @@ class CameraActivity : AppCompatActivity() {
                 cameraProvider!!.bindToLifecycle(this, selectedCamera!!, imagePreview, imageCapture)
             imagePreview?.setSurfaceProvider(cameraView.createSurfaceProvider(camera?.cameraInfo))
         } catch (e: Exception) {
-            Toast.makeText(this, "Something is wrong", Toast.LENGTH_LONG)
+            Toast.makeText(this, "Something is wrong", Toast.LENGTH_LONG).show()
             e.printStackTrace()
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun takePicture() {
         // Don't take a picture if imageCapture have not been initialized
         if (imageCapture == null) return
 
-        val currentDateTime = LocalDateTime.now()
-        val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-        val fileName: String = "${dateTimeFormatter.format(currentDateTime)}.jpg"
+        // Set file name
+        val fileName = "${SimpleDateFormat(
+            "yyyy-MM-dd HH:mm:ss",
+            Locale.US
+        ).format(System.currentTimeMillis())}.jpg"
 
         val imageFolder = File("${cacheDir.path}/images")
         if (!imageFolder.exists()) {
@@ -187,7 +184,7 @@ class CameraActivity : AppCompatActivity() {
         if (requestCode == IMAGE_GALLERY_REQUEST_CODE) {
             if (resultCode != Activity.RESULT_OK) return
 
-            val imageUri: Uri = data!!.data!! as Uri
+            val imageUri: Uri = data!!.data!!
             Utility.getFile(this, imageUri)?.path?.let { lookPreview(it) }
         } else if (requestCode == IMAGE_PREVIEW_ACTIVITY_REQUEST_CODE) {
             val path: String = data!!.getStringExtra(ImagePreviewActivity.KEY_IMAGE_PATH)!!
@@ -197,7 +194,12 @@ class CameraActivity : AppCompatActivity() {
                 }
             } else if (resultCode == Activity.RESULT_OK) {
                 val returned = Intent()
-                val longLifeImage = File("${Utility.getOutputDirectory(this@CameraActivity, resources).path}/images/${Utility.getBasename(path)}")
+                val longLifeImage = File(
+                    "${Utility.getOutputDirectory(
+                        this@CameraActivity,
+                        resources
+                    ).path}/images/${Utility.getBasename(path)}"
+                )
                 File(path).copyTo(longLifeImage)
                 Toast.makeText(this@CameraActivity, "Saved", Toast.LENGTH_LONG).show()
 
