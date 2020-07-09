@@ -22,16 +22,37 @@ import java.io.*
 
 class Utility {
     companion object {
+        /**
+         * Hide all notifications on status bar
+         * It is helpful to avoid user from notifications and let them to focus on current activity
+         *
+         * @param window    Window of activity
+         */
         fun hideStatusBar(window: Window) {
             window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
         }
 
+        /**
+         * Set status bar color as you want by passing color id through argument
+         *
+         * @param window    Window of activity
+         * @param context   context of activity
+         * @param color     Color id
+         */
         fun setStatusBarColor(window: Window, context: Context, @ColorRes color: Int) {
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
             window.statusBarColor = ContextCompat.getColor(context, color)
         }
 
+        /**
+         * Get available output directory from media directory
+         * Use files directory if media directory doesn't exist
+         *
+         * @param context       Context of activity
+         * @param resources     Resources of activity
+         * @return              File of directory
+         */
         fun getOutputDirectory(context: CameraActivity, resources: Resources): File {
             val mediaDir = context.externalMediaDirs.firstOrNull()?.let {
                 File(it, resources.getString(R.string.app_name)).apply { mkdirs() } }
@@ -39,11 +60,23 @@ class Utility {
             return if (mediaDir != null && mediaDir.exists()) mediaDir else context.filesDir
         }
 
+        /**
+         * Trim path name and return file name only
+         *
+         * @param path  Path name
+         * @return      File name
+         */
         fun getBasename(path: String): String {
             return path.substring(path.lastIndexOf(File.separator) + 1)
         }
 
-        private fun getFileName(context: Context, uri: Uri): String {
+        /**
+         * Get filename from URI that has "content://" on its path
+         *
+         * @param context   Context of activity
+         * @param uri       The targeted URI
+         */
+        private fun getFileNameFromUriContent(context: Context, uri: Uri): String {
             var name = ""
             val returnCursor = context.contentResolver.query(uri, null, null, null, null)
             if (returnCursor != null) {
@@ -56,18 +89,32 @@ class Utility {
             return name
         }
 
+        /**
+         * Get file from Uri instance if exist
+         *
+         * @param context   Context of activity
+         * @param uri       The Uri
+         * @return          Whether return file or not, depends on file exist or not from given uri
+         */
         fun getFile(context: Context, uri: Uri): File? {
             val parcelFileDescriptor = context.contentResolver.openFileDescriptor(uri, "r", null)
             var file: File? = null
             parcelFileDescriptor?.let {
                 val inputStream = FileInputStream(parcelFileDescriptor.fileDescriptor)
-                file = File(context.cacheDir, getFileName(context, uri))
+                file = File(context.cacheDir, getFileNameFromUriContent(context, uri))
                 val outputStream = FileOutputStream(file)
                 inputStream.copyTo(out = outputStream)
             }
             return file
         }
 
+        /**
+         * Compress image with variant quality between 0 - 100 (worst - best)
+         *
+         * @param path          The path of image
+         * @param quality       Quality of image (0 - 100)
+         * @param extension     Bitmap compress format, default is JPEG
+         */
         fun compressImage(
             path: String,
             quality: Int,
@@ -93,6 +140,12 @@ class Utility {
             }
         }
 
+        /**
+         * Parse JSON into generic object
+         *
+         * @param json  Serialized JSON string
+         * @return      A list of key-value, represented by HashMap
+         */
         fun parseJSON(json: String?): HashMap<String, Any> {
             val `object`: JsonObject = JsonParser.parseString(json) as JsonObject
             val set: Set<Map.Entry<String, JsonElement>> =

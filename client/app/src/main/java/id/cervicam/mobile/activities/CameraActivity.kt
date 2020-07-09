@@ -36,6 +36,8 @@ class CameraActivity : AppCompatActivity() {
         const val KEY_IMAGE_PATH = "IMAGE_PATH"
     }
 
+    private var savedImage: File? = null
+
     private var flashIsOn: Boolean = false
     private var cameraProvider: ProcessCameraProvider? = null
     private var selectedCamera: CameraSelector? = null
@@ -144,23 +146,26 @@ class CameraActivity : AppCompatActivity() {
             Locale.US
         ).format(System.currentTimeMillis())}.jpg"
 
-        val imageFolder = File("${Utility.getOutputDirectory(
-            this@CameraActivity,
-            resources
-        ).path}/images")
-        if (!imageFolder.exists()) {
-            imageFolder.mkdirs()
+        val mediaFolder = File(
+            "${Utility.getOutputDirectory(
+                this@CameraActivity,
+                resources
+            ).path}/images"
+        )
+
+        if (!mediaFolder.exists()) {
+            mediaFolder.mkdirs()
         }
-        val image = File(imageFolder, fileName)
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(image).build()
+        val takenImage = File(mediaFolder, fileName)
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(takenImage).build()
 
         imageCapture!!.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                    val path = image.path
-                    lookPreview(path)
+                    savedImage = takenImage
+                    lookPreview(savedImage!!.path)
                 }
 
                 override fun onError(exception: ImageCaptureException) {
@@ -190,11 +195,10 @@ class CameraActivity : AppCompatActivity() {
             val imageUri: Uri = data!!.data!!
             Utility.getFile(this, imageUri)?.path?.let { lookPreview(it) }
         } else if (requestCode == IMAGE_PREVIEW_ACTIVITY_REQUEST_CODE) {
-            val path: String = data!!.getStringExtra(ImagePreviewActivity.KEY_IMAGE_PATH)!!
-            if (resultCode == Activity.RESULT_CANCELED) {
-                if (path.contains("Android/media")) {
-                    File(path).delete()
-                }
+            if (resultCode == Activity.RESULT_CANCELED && savedImage!!.path.contains("Android/media") && savedImage!!.exists()) {
+                savedImage!!.delete()
+            } else if (resultCode == Activity.RESULT_OK) {
+                finish()
             }
         }
     }
