@@ -15,6 +15,10 @@ import id.cervicam.mobile.helper.Utility
 import kotlinx.android.synthetic.main.activity_image_preview.*
 import java.io.File
 
+/**
+ * Preview image, expect an image path from the activity that calls this activity
+ *
+ */
 class ImagePreviewActivity : AppCompatActivity() {
     companion object {
         const val KEY_IMAGE_PATH = "IMAGE_URI"
@@ -23,6 +27,11 @@ class ImagePreviewActivity : AppCompatActivity() {
     private var originalImage: File? = null
     private var previewedImage: File? = null
 
+    /**
+     * Create a view of image preview and load an image
+     *
+     * @param savedInstanceState    Bundle of activity
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Utility.hideStatusBar(window)
@@ -30,8 +39,8 @@ class ImagePreviewActivity : AppCompatActivity() {
         supportActionBar?.hide()
         setContentView(R.layout.activity_image_preview)
 
+        // Get image from argument and set it as original image
         val imagePath: String = intent.getStringExtra(KEY_IMAGE_PATH)!!
-
         originalImage = File(imagePath)
 
         // Compress image if the size is more than 300 Kb
@@ -40,7 +49,7 @@ class ImagePreviewActivity : AppCompatActivity() {
             originalImage?.copyTo(previewedImage!!)
             Utility.compressImage(previewedImage!!.path, 25)
         } else {
-            // Use original image to preview if the size is small enough
+            // Use the original image to preview if the size is small enough
             previewedImage = originalImage
         }
 
@@ -66,6 +75,7 @@ class ImagePreviewActivity : AppCompatActivity() {
             .replace(R.id.nextButtonView, nextButton)
             .commit()
 
+        // Load previewed image
         Picasso.with(this)
             .load(previewedImage)
             .config(Bitmap.Config.RGB_565)
@@ -87,6 +97,10 @@ class ImagePreviewActivity : AppCompatActivity() {
             })
     }
 
+    /**
+     * Send a canceled result to the one calls this activity and delete preview image from cache folder
+     *
+     */
     override fun onBackPressed() {
         if (originalImage!!.path != previewedImage!!.path) {
             previewedImage!!.delete()
@@ -95,6 +109,10 @@ class ImagePreviewActivity : AppCompatActivity() {
         super.onBackPressed()
     }
 
+    /**
+     * If user agrees to use the image, then send it to server to be classified and call the page that shows the result
+     *
+     */
     private fun sendImageAndOpenResultActivity() {
         val openResultActivityIntent = Intent(this, ResultActivity::class.java)
         openResultActivityIntent.putExtra(ResultActivity.KEY_REQUEST_ID, "1")                   // Dummy request id

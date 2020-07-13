@@ -20,7 +20,10 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-
+/**
+ * Use to get image either from camera or gallery
+ *
+ */
 class CameraActivity : AppCompatActivity() {
     companion object {
         private val PERMISSIONS: Array<String> = arrayOf(
@@ -45,6 +48,11 @@ class CameraActivity : AppCompatActivity() {
     private var imagePreview: Preview? = null
     private var imageCapture: ImageCapture? = null
 
+    /**
+     * Not only create view but also set all listeners and check camera permission
+     *
+     * @param   savedInstanceState  Bundle of activity
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Utility.hideStatusBar(window)
@@ -60,6 +68,10 @@ class CameraActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Set button listeners
+     *
+     */
     private fun setListeners() {
         galleryButton.setOnClickListener {
             openGallery()
@@ -81,6 +93,7 @@ class CameraActivity : AppCompatActivity() {
 
     /**
      * Check whether all needed permission are granted by client or not
+     *
      */
     private fun hasCameraPermission(): Boolean {
         return PERMISSIONS.fold(
@@ -95,6 +108,10 @@ class CameraActivity : AppCompatActivity() {
         )
     }
 
+    /**
+     * Setup camera and integrate it to the surface
+     *
+     */
     private fun openCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
@@ -116,12 +133,20 @@ class CameraActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
+    /**
+     * Send a pick request to gallery app
+     *
+     */
     private fun openGallery() {
         Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI).apply {
             startActivityForResult(this, IMAGE_GALLERY_REQUEST_CODE)
         }
     }
 
+    /**
+     * Set all parts of camera in correct order of cycle
+     *
+     */
     private fun setCameraCycles() {
         if (cameraProvider == null || selectedCamera == null || imagePreview == null || imageCapture == null) return
 
@@ -131,11 +156,17 @@ class CameraActivity : AppCompatActivity() {
                 cameraProvider!!.bindToLifecycle(this, selectedCamera!!, imagePreview, imageCapture)
             imagePreview?.setSurfaceProvider(cameraView.createSurfaceProvider(camera?.cameraInfo))
         } catch (e: Exception) {
+            // All exception
             Toast.makeText(this, "Something is wrong", Toast.LENGTH_LONG).show()
             e.printStackTrace()
         }
     }
 
+    /**
+     * Save a current image on surface and save it to the media folder
+     * The filename format: "yyyy-MM-dd HH:mm:ss.jpeg"
+     *
+     */
     private fun takePicture() {
         // Don't take a picture if imageCapture have not been initialized
         if (imageCapture == null) return
@@ -146,19 +177,23 @@ class CameraActivity : AppCompatActivity() {
             Locale.US
         ).format(System.currentTimeMillis())}.jpg"
 
+        // Get media folder
         val mediaFolder = File(
             "${Utility.getOutputDirectory(
-                this@CameraActivity,
-                resources
+                this@CameraActivity
             ).path}/images"
         )
 
+        // Check whether the media folder exists or not, if doesn't then create the folder
         if (!mediaFolder.exists()) {
             mediaFolder.mkdirs()
         }
         val takenImage = File(mediaFolder, fileName)
+
+        // Set an empty file as output of image capturing
         val outputOptions = ImageCapture.OutputFileOptions.Builder(takenImage).build()
 
+        // Create an image in given file
         imageCapture!!.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(this),
@@ -180,22 +215,43 @@ class CameraActivity : AppCompatActivity() {
         )
     }
 
+    /**
+     * Send intent to open image preview activity with a given image path.
+     *
+     * @param path  Image path on mobile
+     */
     private fun lookPreview(path: String) {
         val openImagePreviewIntent = Intent(this, ImagePreviewActivity::class.java)
         openImagePreviewIntent.putExtra(ImagePreviewActivity.KEY_IMAGE_PATH, path)
         startActivityForResult(openImagePreviewIntent, IMAGE_PREVIEW_ACTIVITY_REQUEST_CODE)
     }
 
+    /**
+     * Override method to handle activity result.
+     * Used to receive image from gallery.
+     * Also how to treat an image should be deleted or not that depends from next activity result which is from an image preview.
+     *
+     * @param requestCode   Request code
+     * @param resultCode    The result of activity
+     * @param data          A return from activity
+     */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == IMAGE_GALLERY_REQUEST_CODE) {
-            if (resultCode != Activity.RESULT_OK) return
+            if (resultCode != Activity.RESULT_OK) {
+                // Must be OK, if not then should not go next
+                Toast.makeText(this, "Can't get a picture from gallery", Toast.LENGTH_LONG).show()
+            }
 
+            // Get image path from gallery app after successfully pick an image
             val imageUri: Uri = data!!.data!!
+
+            // Convert image path that has content:// on its prefix into real path and look in image preview activity
             Utility.getFile(this, imageUri)?.path?.let { lookPreview(it) }
         } else if (requestCode == IMAGE_PREVIEW_ACTIVITY_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_CANCELED && savedImage!!.path.contains("Android/media") && savedImage!!.exists()) {
+                // If the request is canceled, then assume the user declines the image to be used. So it must be deleted
                 savedImage!!.delete()
             } else if (resultCode == Activity.RESULT_OK) {
                 finish()
@@ -203,6 +259,14 @@ class CameraActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Permission result from permission request.
+     * For this case, only use to check whether the application could be able to use camera or not.
+     *
+     * @param requestCode   Request code
+     * @param permissions   List of permission
+     * @param grantResults  List of granted permission
+     */
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,

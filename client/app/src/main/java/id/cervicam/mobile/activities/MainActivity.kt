@@ -1,6 +1,5 @@
 package id.cervicam.mobile.activities
 
-// Own libraries
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -11,16 +10,27 @@ import id.cervicam.mobile.R
 import id.cervicam.mobile.fragments.Button
 import kotlinx.android.synthetic.main.activity_main.*
 
+/**
+ * A starter activity when the app is starting
+ *
+ */
 class MainActivity : AppCompatActivity() {
     companion object {
         const val OPEN_CAMERA_REQUEST_CODE = 101
     }
 
+    // List of classification request that has been sent from client to server
+    // The value is a dummy for now, should be changed if a server has been implemented
     private val results: Array<Pair<String, Int>> =  arrayOf(
         Pair("Result 1", 1),
         Pair("Result 2", 2)
     )
 
+    /**
+     * Create a view of main activity and set all fragments
+     *
+     * @param savedInstanceState    Bundle of activity
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -55,6 +65,11 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
+    /**
+     * Open classification result from a given request id
+     *
+     * @param requestId   Request id of classification
+     */
     private fun openResultActivity(requestId: String) {
         val showResultActivity = Intent(this, ResultActivity::class.java)
         showResultActivity.putExtra(ResultActivity.KEY_REQUEST_ID, requestId)

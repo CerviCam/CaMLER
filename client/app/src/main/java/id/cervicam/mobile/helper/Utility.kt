@@ -20,6 +20,10 @@ import id.cervicam.mobile.activities.CameraActivity
 import java.io.*
 
 
+/**
+ * Collection of common functions
+ *
+ */
 class Utility {
     companion object {
         /**
@@ -47,15 +51,14 @@ class Utility {
 
         /**
          * Get available output directory from media directory
-         * Use files directory if media directory doesn't exist
+         * Use file directory if media directory doesn't exist
          *
          * @param context       Context of activity
-         * @param resources     Resources of activity
          * @return              File of directory
          */
-        fun getOutputDirectory(context: CameraActivity, resources: Resources): File {
+        fun getOutputDirectory(context: CameraActivity): File {
             val mediaDir = context.externalMediaDirs.firstOrNull()?.let {
-                File(it, resources.getString(R.string.app_name)).apply { mkdirs() } }
+                File(it, context.getString(R.string.app_name)).apply { mkdirs() } }
 
             return if (mediaDir != null && mediaDir.exists()) mediaDir else context.filesDir
         }
@@ -147,7 +150,7 @@ class Utility {
          * @return      A list of key-value, represented by HashMap
          */
         fun parseJSON(json: String?): HashMap<String, Any> {
-            val `object`: JsonObject = JsonParser.parseString(json) as JsonObject
+            val `object` = JsonParser.parseString(json) as JsonObject
             val set: Set<Map.Entry<String, JsonElement>> =
                 `object`.entrySet()
             val iterator: Iterator<Map.Entry<String, JsonElement>> =
