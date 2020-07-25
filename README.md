@@ -41,7 +41,7 @@ Instead of deploying the model in the client itself, we will create an applicati
   - Remove the image file from the media folder if the result has been retrieved.
 
 ## Server
-To be discussed later.
+CaMLER server can be seen in **CaMLER-Main-API** and **CaMLER-AI-API** repository.
 
 ## Contributors
 - **PIC**<br>
