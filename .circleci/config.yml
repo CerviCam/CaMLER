@@ -1,61 +1,13 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine. See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
-
+# Use a package of configuration called an orb.
 orbs:
- android: circleci/android@0.2.0
-
-jobs:
-  build APK only:
-    executor: android/android
-    steps:
-      - checkout
-      - run: 
-          name: Set gradlew to be executable file
-          command: cd client; chmod +x ./gradlew
-      - run:
-          name: Build APK
-          command: cd client; ./gradlew assembleStaging
-      - store_artifacts:
-          path: ./client/app/build/outputs/apk
-          destination: apk
-
-  build APK and Bundle:
-    executor: android/android
-    steps:
-      - checkout
-      - run:
-          name: Set keystore.properties
-          command: cd ./client; echo -e "KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD}\nKEYSTORE_KEY_ALIAS=${KEYSTORE_KEY_ALIAS}\nKEYSTORE_KEY_PASSWORD=${KEYSTORE_KEY_PASSWORD}" >> keystore.properties
-      - run:
-          name: Set release.keystore
-          command: cd ./client/app; echo $KEYSTORE_FILE | base64 -d > release.keystore
-      - run: 
-          name: Set gradlew to be executable file
-          command: cd client; chmod +x ./gradlew
-      - run:
-          name: Build APK
-          command: cd client; ./gradlew assembleRelease
-      - run:
-          name: Build Bundle
-          command: cd client; ./gradlew bundleRelease
-      - store_artifacts:
-          path: ./client/app/build/outputs/apk
-          destination: apk
-      - store_artifacts:
-          path: ./client/app/build/outputs/bundle
-          destination: bundle
-
+  # Declare a dependency on the welcome-orb
+  welcome: circleci/welcome-orb@0.4.1
+# Orchestrate or schedule a set of jobs
 workflows:
-  version: 2
-  build:
+  # Name the workflow "welcome"
+  welcome:
+    # Run the welcome/run job in its own container
     jobs:
-      - build APK only:
-          filters:
-            branches:
-              only:
-                - staging
-
-      - build APK and Bundle:
-          filters:
-            branches:
-              only:
-                - master
+      - welcome/run
