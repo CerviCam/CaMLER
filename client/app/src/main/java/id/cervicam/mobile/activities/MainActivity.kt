@@ -8,7 +8,9 @@ import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
 import id.cervicam.mobile.R
 import id.cervicam.mobile.fragments.Button
+import id.cervicam.mobile.helper.Utility
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.runBlocking
 
 /**
  * A starter activity when the app is starting
@@ -21,10 +23,7 @@ class MainActivity : AppCompatActivity() {
 
     // List of classification request that has been sent from client to server
     // The value is a dummy for now, should be changed if a server has been implemented
-    private val results: Array<Pair<String, Int>> =  arrayOf(
-        Pair("Result 1", 1),
-        Pair("Result 2", 2)
-    )
+    private val results: Array<Pair<String, Int>> =  arrayOf()
 
     /**
      * Create a view of main activity and set all fragments
@@ -33,6 +32,8 @@ class MainActivity : AppCompatActivity() {
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Utility.setAccount(this)
+
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 

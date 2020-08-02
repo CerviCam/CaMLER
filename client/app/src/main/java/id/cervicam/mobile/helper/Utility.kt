@@ -1,7 +1,6 @@
 package id.cervicam.mobile.helper
 
 import android.content.Context
-import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.ExifInterface
@@ -11,13 +10,18 @@ import android.view.Window
 import android.view.WindowManager
 import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
-import com.google.gson.JsonArray
-import com.google.gson.JsonElement
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
+import com.google.gson.*
 import id.cervicam.mobile.R
 import id.cervicam.mobile.activities.CameraActivity
+import id.cervicam.mobile.services.MainService
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.readText
+import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.runBlocking
 import java.io.*
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 
 /**
@@ -33,7 +37,10 @@ class Utility {
          * @param window    Window of activity
          */
         fun hideStatusBar(window: Window) {
-            window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN
+            )
         }
 
         /**
@@ -58,7 +65,8 @@ class Utility {
          */
         fun getOutputDirectory(context: CameraActivity): File {
             val mediaDir = context.externalMediaDirs.firstOrNull()?.let {
-                File(it, context.getString(R.string.app_name)).apply { mkdirs() } }
+                File(it, context.getString(R.string.app_name)).apply { mkdirs() }
+            }
 
             return if (mediaDir != null && mediaDir.exists()) mediaDir else context.filesDir
         }
@@ -136,11 +144,16 @@ class Utility {
                 val currentExif = ExifInterface(path)
                 currentExif.setAttribute(ExifInterface.TAG_ORIENTATION, exifOrientation)
                 currentExif.saveAttributes()
-            } catch(e: IOException) {
+            } catch (e: IOException) {
                 throw e
             } finally {
                 outStream?.close()
             }
+        }
+
+        fun stringifyJSON(data: HashMap<String, Any>): String {
+            val gson = Gson()
+            return gson.toJson(data).toString()
         }
 
         /**
@@ -180,6 +193,65 @@ class Utility {
                 }
             }
             return map
+        }
+
+        @Synchronized
+        fun getAppId(context: Context): String {
+            var id: String? = LocalStorage.get(context, LocalStorage.PreferenceKeys.ID.value)
+
+            // If id doesn't exist then create new one and put the id into SharedPreference for future use
+            if (id == null) {
+                id = UUID.randomUUID().toString()
+                LocalStorage.set(context, LocalStorage.PreferenceKeys.ID.value, id)
+            }
+            return id
+        }
+
+        fun setAccount(context: Context) {
+            var username: String? =
+                LocalStorage.get(context, LocalStorage.PreferenceKeys.USERNAME.value)
+            var password: String? =
+                LocalStorage.get(context, LocalStorage.PreferenceKeys.PASSWORD.value)
+
+            println(username)
+            println(password)
+
+            // If username or password is empty then create new one and put the credential into SharedPreferences
+            if (username == null || password == null) {
+                username = getAppId(context)
+                password = getAppId(context)
+
+                runBlocking {
+                    val response: HttpResponse = MainService.createUser(
+                        context,
+                        name = "bot",
+                        username = username,
+                        password = password
+                    )
+
+                    print(response.status)
+
+                    if (response.status == HttpStatusCode.Created) {
+                        LocalStorage.set(context, LocalStorage.PreferenceKeys.USERNAME.value, username)
+                        LocalStorage.set(context, LocalStorage.PreferenceKeys.PASSWORD.value, password)
+                    }
+                }
+            }
+
+            runBlocking {
+                print("test")
+                val response: HttpResponse = MainService.login(
+                    context,
+                    username = username,
+                    password = password
+                )
+                print(response.status)
+                if (response.status == HttpStatusCode.OK) {
+                    val body = parseJSON(response.readText())
+                    print(body)
+                    LocalStorage.set(context, LocalStorage.PreferenceKeys.TOKEN.value, body["token"] as String)
+                }
+            }
         }
     }
 }

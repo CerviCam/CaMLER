@@ -59,7 +59,7 @@ class ResultActivity : AppCompatActivity() {
      */
     private fun getAndSetResult(requestId: String) = runBlocking {
         launch(Dispatchers.Default) {
-            val response: HttpResponse = MainService.fetchClassificationResult(requestId)
+            val response: HttpResponse = MainService.fetchClassificationResult(this@ResultActivity, requestId)
             if (response.status == HttpStatusCode.OK) {
                 Utility.parseJSON(response.readText())
 //                setResult(responseBody)
