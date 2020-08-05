@@ -12,7 +12,12 @@ import com.squareup.picasso.Picasso
 import id.cervicam.mobile.R
 import id.cervicam.mobile.fragments.Button
 import id.cervicam.mobile.helper.Utility
+import id.cervicam.mobile.services.MainService
 import kotlinx.android.synthetic.main.activity_image_preview.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import okhttp3.Response
 import java.io.File
 
 /**
@@ -65,6 +70,7 @@ class ImagePreviewActivity : AppCompatActivity() {
         val nextButton = Button.newInstance(
             getString(R.string.activity_imagepreview_next),
             onClick = {
+//                println("Clicked")
                 sendImageAndOpenResultActivity()
             }
         )
@@ -110,16 +116,36 @@ class ImagePreviewActivity : AppCompatActivity() {
     }
 
     /**
-     * If user agrees to use the image, then send it to server to be classified and call the page that shows the result
+     * If user decides to use the image, then send it to server to be classified and call the page that shows the result
      *
      */
     private fun sendImageAndOpenResultActivity() {
-        val openResultActivityIntent = Intent(this, ResultActivity::class.java)
-        openResultActivityIntent.putExtra(ResultActivity.KEY_REQUEST_ID, "1")                   // Dummy request id
-        startActivity(openResultActivityIntent)
+        // Don't send any image if the image is none
+        if (originalImage == null) return
 
-        setResult(Activity.RESULT_OK)
-        finish()
-//        TODO("Send image to server over HTTP Request and open result activity")
+        runBlocking {
+            launch(Dispatchers.Default) {
+                // Send to server
+                val response: Response = MainService.classifyImage(this@ImagePreviewActivity, originalImage!!)
+
+                runOnUiThread {
+                    if (response.code() == 201) {
+                        // Get a request id from created classification
+                        val body = Utility.parseJSON(response.body()?.string())
+                        val id: String = body["id"].toString()
+
+                        // Open the result on another activity
+                        val openResultActivityIntent = Intent(this@ImagePreviewActivity, ResultActivity::class.java)
+                        openResultActivityIntent.putExtra(ResultActivity.KEY_REQUEST_ID, id)
+                        startActivity(openResultActivityIntent)
+
+                        setResult(Activity.RESULT_OK)
+                        finish()
+                    } else {
+                        Toast.makeText(this@ImagePreviewActivity, "Failed to create a classification on server", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        }
     }
 }

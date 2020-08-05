@@ -8,6 +8,7 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.view.Window
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
 import com.google.gson.*
@@ -18,6 +19,7 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readText
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
+import okhttp3.Response
 import java.io.*
 import java.util.*
 import kotlin.collections.ArrayList
@@ -207,50 +209,60 @@ class Utility {
             return id
         }
 
-        fun setAccount(context: Context) {
+        private fun setToken(context: Context, username: String, password: String): Boolean? {
+            val response: Response = MainService.getToken(
+                context,
+                username = username,
+                password = password
+            )
+
+            return if (response.code() == 200) {
+                val body = parseJSON(response.body()?.string())
+
+                try {
+                    (body["non_field_errors"] as JsonArray)[0].toString() != "Unable to log in with provided credentials."
+                } catch (e: TypeCastException) {
+                    LocalStorage.set(context, LocalStorage.PreferenceKeys.TOKEN.value, body["token"].toString())
+                    true
+                }
+            } else {
+                null
+            }
+        }
+
+        fun setUser(context: Context) {
             var username: String? =
                 LocalStorage.get(context, LocalStorage.PreferenceKeys.USERNAME.value)
             var password: String? =
                 LocalStorage.get(context, LocalStorage.PreferenceKeys.PASSWORD.value)
 
-            println(username)
-            println(password)
+            var shouldCreateUser: Boolean? = false
+            if (username != null && password != null) {
+                shouldCreateUser = setToken(context, username, password)
+            }
 
             // If username or password is empty then create new one and put the credential into SharedPreferences
-            if (username == null || password == null) {
+            if (shouldCreateUser == true) {
                 username = getAppId(context)
                 password = getAppId(context)
 
-                runBlocking {
-                    val response: HttpResponse = MainService.createUser(
-                        context,
-                        name = "bot",
-                        username = username,
-                        password = password
-                    )
-
-                    print(response.status)
-
-                    if (response.status == HttpStatusCode.Created) {
-                        LocalStorage.set(context, LocalStorage.PreferenceKeys.USERNAME.value, username)
-                        LocalStorage.set(context, LocalStorage.PreferenceKeys.PASSWORD.value, password)
-                    }
-                }
-            }
-
-            runBlocking {
-                print("test")
-                val response: HttpResponse = MainService.login(
+                val response: Response = MainService.createUser(
                     context,
+                    name = "bot",
                     username = username,
                     password = password
                 )
-                print(response.status)
-                if (response.status == HttpStatusCode.OK) {
-                    val body = parseJSON(response.readText())
-                    print(body)
-                    LocalStorage.set(context, LocalStorage.PreferenceKeys.TOKEN.value, body["token"] as String)
+
+                if (response.code() == 201) {
+                    LocalStorage.set(context, LocalStorage.PreferenceKeys.USERNAME.value, username)
+                    LocalStorage.set(context, LocalStorage.PreferenceKeys.PASSWORD.value, password)
                 }
+            }
+
+            val isFailed: Boolean = username != null && password != null && setToken(context, username, password) == false
+
+            if (isFailed) {
+                Toast.makeText(context, "Something is wrong", Toast.LENGTH_LONG).show()
             }
         }
     }

@@ -163,7 +163,7 @@ class CameraActivity : AppCompatActivity() {
     }
 
     /**
-     * Save a current image on surface and save it to the media folder
+     * Set a current image on surface and save it to the media folder
      * The filename format: "yyyy-MM-dd HH:mm:ss.jpeg"
      *
      */

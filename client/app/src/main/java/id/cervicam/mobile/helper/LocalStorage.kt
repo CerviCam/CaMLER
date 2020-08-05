@@ -1,5 +1,6 @@
 package id.cervicam.mobile.helper
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 
@@ -21,11 +22,12 @@ class LocalStorage {
             )
         }
 
+        @SuppressLint("ApplySharedPref")
         fun set(context: Context, key: String, value: String) {
             val sharedPreferences = getPreferences(context)
             val sharedPreferencesEditor: SharedPreferences.Editor = sharedPreferences.edit()
             sharedPreferencesEditor.putString(key, value)
-            sharedPreferencesEditor.apply()
+            sharedPreferencesEditor.commit()
         }
 
         fun get(context: Context, key: String): String? {

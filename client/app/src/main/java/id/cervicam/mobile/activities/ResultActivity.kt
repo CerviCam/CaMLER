@@ -1,8 +1,11 @@
 package id.cervicam.mobile.activities
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.squareup.picasso.Picasso
 import id.cervicam.mobile.R
 import id.cervicam.mobile.fragments.Button
 import id.cervicam.mobile.helper.Utility
@@ -10,9 +13,13 @@ import id.cervicam.mobile.services.MainService
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readText
 import io.ktor.http.HttpStatusCode
+import kotlinx.android.synthetic.main.activity_image_preview.*
+import kotlinx.android.synthetic.main.activity_image_preview.imageView
+import kotlinx.android.synthetic.main.activity_result.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import okhttp3.Response
 
 /**
  * Show classification result
@@ -59,12 +66,20 @@ class ResultActivity : AppCompatActivity() {
      */
     private fun getAndSetResult(requestId: String) = runBlocking {
         launch(Dispatchers.Default) {
-            val response: HttpResponse = MainService.fetchClassificationResult(this@ResultActivity, requestId)
-            if (response.status == HttpStatusCode.OK) {
-                Utility.parseJSON(response.readText())
-//                setResult(responseBody)
-            } else {
-                TODO("Implement handler for status code != 200")
+            val response: Response = MainService.getClassification(this@ResultActivity, requestId)
+            runOnUiThread {
+                if (response.code() == 200) {
+                    val body = Utility.parseJSON(response.body()?.string())
+                    Picasso.with(this@ResultActivity)
+                        .load(body["image_url"].toString())
+                        .config(Bitmap.Config.RGB_565)
+                        .into(imageView)
+
+                    statusTextView.text = (body["status"] as HashMap<*, *>)["label"].toString()
+                    resultTextView.text = (body["result"] as HashMap<*, *>)["label"].toString()
+                } else {
+                    Toast.makeText(this@ResultActivity, "Unable to get the classification, try again later", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
