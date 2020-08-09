@@ -18,10 +18,15 @@ import id.cervicam.mobile.services.MainService
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.readText
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.Response
 import java.io.*
 import java.util.*
+import java.util.concurrent.CountDownLatch
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -179,16 +184,22 @@ class Utility {
                 if (!value.isJsonPrimitive) {
                     if (value.isJsonObject) {
                         map[key] = parseJSON(value.toString())
-                    } else if (value.isJsonArray && value.toString().contains(":")) {
-                        val list: MutableList<HashMap<String, Any>> =
-                            ArrayList()
-                        val array: JsonArray = value.asJsonArray
-                        for (element in array) {
-                            list.add(parseJSON(element.toString()))
+                    } else if (value.isJsonArray) {
+                        val valueIsObject: Boolean = value.toString().contains(":")
+
+                        map[key] = if (valueIsObject) {
+                            val list: MutableList<HashMap<String, Any>> = ArrayList()
+                            for (element in value.asJsonArray) {
+                                list.add(parseJSON(element.toString()))
+                            }
+                            list
+                        } else {
+                            val list: MutableList<String> = ArrayList()
+                            for (element in value.asJsonArray) {
+                                list.add(element.toString())
+                            }
+                            list
                         }
-                        map[key] = list
-                    } else if (value.isJsonArray && !value.toString().contains(":")) {
-                        map[key] = value.asJsonArray
                     }
                 } else {
                     map[key] = value.asString
@@ -209,25 +220,40 @@ class Utility {
             return id
         }
 
-        private fun setToken(context: Context, username: String, password: String): Boolean? {
-            val response: Response = MainService.getToken(
+        private fun setToken(context: Context, username: String, password: String): Boolean {
+            val waitUntilGetResponse = CountDownLatch(1)
+            var foundToken: Boolean = false
+            MainService.getToken(
                 context,
                 username = username,
-                password = password
+                password = password,
+                callback = object: Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        e.printStackTrace()
+                        waitUntilGetResponse.countDown()
+                    }
+
+                    override fun onResponse(call: Call, response: Response) {
+                        if (response.isSuccessful) {
+                            if (response.code() == 200) {
+                                val body = parseJSON(response.body()?.string())
+                                foundToken = try {
+                                    (body["non_field_errors"] as ArrayList<*>)[0].toString() != "\"Unable to log in with provided credentials.\""
+                                } catch (e: TypeCastException) {
+                                    LocalStorage.set(context, LocalStorage.PreferenceKeys.TOKEN.value, body["token"].toString())
+                                    true
+                                }
+                            }
+                        } else {
+                            Toast.makeText(context, "Request failed", Toast.LENGTH_LONG).show()
+                        }
+                        waitUntilGetResponse.countDown()
+                    }
+                }
             )
 
-            return if (response.code() == 200) {
-                val body = parseJSON(response.body()?.string())
-
-                try {
-                    (body["non_field_errors"] as JsonArray)[0].toString() != "Unable to log in with provided credentials."
-                } catch (e: TypeCastException) {
-                    LocalStorage.set(context, LocalStorage.PreferenceKeys.TOKEN.value, body["token"].toString())
-                    true
-                }
-            } else {
-                null
-            }
+            waitUntilGetResponse.await()
+            return foundToken
         }
 
         fun setUser(context: Context) {
@@ -236,33 +262,55 @@ class Utility {
             var password: String? =
                 LocalStorage.get(context, LocalStorage.PreferenceKeys.PASSWORD.value)
 
-            var shouldCreateUser: Boolean? = false
+            var shouldCreateUser: Boolean = true
             if (username != null && password != null) {
-                shouldCreateUser = setToken(context, username, password)
+                shouldCreateUser = !setToken(context, username, password)
             }
 
+            val creatingUserIfNecessary = CountDownLatch(1)
+
             // If username or password is empty then create new one and put the credential into SharedPreferences
-            if (shouldCreateUser == true) {
+            if (shouldCreateUser) {
                 username = getAppId(context)
                 password = getAppId(context)
 
-                val response: Response = MainService.createUser(
-                    context,
-                    name = "bot",
-                    username = username,
-                    password = password
-                )
+                runBlocking {
+                    launch(Dispatchers.Default) {
+                        MainService.createUser(
+                            context,
+                            name = "${android.os.Build.MODEL} [${username}]",
+                            username = username,
+                            password = password,
+                            callback = object: Callback {
+                                override fun onFailure(call: Call, e: IOException) {
+                                    e.printStackTrace()
+                                    creatingUserIfNecessary.countDown()
+                                }
 
-                if (response.code() == 201) {
-                    LocalStorage.set(context, LocalStorage.PreferenceKeys.USERNAME.value, username)
-                    LocalStorage.set(context, LocalStorage.PreferenceKeys.PASSWORD.value, password)
+                                override fun onResponse(call: Call, response: Response) {
+                                    if (response.isSuccessful) {
+                                        if (response.code() == 201) {
+                                            LocalStorage.set(context, LocalStorage.PreferenceKeys.USERNAME.value, username)
+                                            LocalStorage.set(context, LocalStorage.PreferenceKeys.PASSWORD.value, password)
+                                        }
+                                    } else {
+                                        Toast.makeText(context, "Request failed", Toast.LENGTH_LONG).show()
+                                    }
+                                    creatingUserIfNecessary.countDown()
+                                }
+                            }
+                        )
+                    }
                 }
+            } else {
+                creatingUserIfNecessary.countDown()
             }
 
-            val isFailed: Boolean = username != null && password != null && setToken(context, username, password) == false
+            creatingUserIfNecessary.await()
+            val failToGetToken: Boolean = username != null && password != null && !setToken(context, username, password)
 
-            if (isFailed) {
-                Toast.makeText(context, "Something is wrong", Toast.LENGTH_LONG).show()
+            if (failToGetToken) {
+                Toast.makeText(context, "Fail to set token", Toast.LENGTH_LONG).show()
             }
         }
     }

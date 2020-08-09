@@ -1,5 +1,6 @@
 package id.cervicam.mobile.services
 
+import android.annotation.SuppressLint
 import android.content.Context
 import id.cervicam.mobile.helper.LocalStorage
 import id.cervicam.mobile.helper.Utility
@@ -16,19 +17,24 @@ class MainService {
         DELETE("DELETE")
     }
     companion object {
-        private const val API_URL = "http://34.101.228.172"
+        private const val API_DOMAIN = "http://34.101.228.172"
         private const val API_KEY = "28e797c9ffda7b1c85191911ad50b35489a2900e"
 
-        private fun sendRequest(
+        private fun getAPIUri(endpoint: String): String {
+            return "${API_DOMAIN}${endpoint}"
+        }
+
+        fun sendRequest(
             context: Context,
-            endpoint: String,
+            callback: Callback,
+            uri: String,
             method: HttpMethod = HttpMethod.GET,
             body: RequestBody? = null,
             useAuth: Boolean = false
-        ): Response {
+        ) {
             val client: OkHttpClient = OkHttpClient().newBuilder().build()
             val rawRequest: Request.Builder = Request.Builder()
-                .url("${API_URL}${endpoint}")
+                .url(uri)
                 .header("Api-Key", API_KEY)
                 .method(method.value, body)
 
@@ -37,11 +43,12 @@ class MainService {
             }
 
             val request: Request = rawRequest.build()
-            return client.newCall(request).execute()
+            client.newCall(request).enqueue(callback)
         }
 
         fun createUser(
             context: Context,
+            callback: Callback,
             name: String,
             username: String,
             password: String,
@@ -52,10 +59,11 @@ class MainService {
             workplaceCity: String = "",
             workplaceStreetName: String = "",
             workplacePostalCode: String = ""
-        ): Response {
-            return sendRequest(
+        ) {
+            sendRequest(
                 context,
-                "/api/v1/users/",
+                callback = callback,
+                uri = getAPIUri("/api/v1/users/"),
                 method = HttpMethod.POST,
                 body = RequestBody.create(
                     MediaType.parse("application/json"),
@@ -82,10 +90,11 @@ class MainService {
             )
         }
 
-        fun getToken(context: Context, username: String, password: String): Response {
-            return sendRequest(
+        fun getToken(context: Context, callback: Callback, username: String, password: String) {
+            sendRequest(
                 context,
-                "/api/v1/auth/token/",
+                callback = callback,
+                uri = getAPIUri("/api/v1/auth/token/"),
                 method = HttpMethod.POST,
                 body = RequestBody.create(
                     MediaType.parse("application/json"),
@@ -98,10 +107,11 @@ class MainService {
             )
         }
 
-        fun classifyImage(context: Context, image: File): Response {
+        fun classifyImage(context: Context, callback: Callback, image: File) {
             return sendRequest(
                 context,
-                "/api/v1/cervic-model/classifications/",
+                callback = callback,
+                uri = getAPIUri("/api/v1/cervic-model/classifications/"),
                 method = HttpMethod.POST,
                 body = MultipartBody.Builder().setType(MultipartBody.FORM)
                     .addFormDataPart(
@@ -117,19 +127,29 @@ class MainService {
             )
         }
 
-        fun getAllClassifications(context: Context): Response {
-            return sendRequest(
+        fun getAllClassifications(context: Context, callback: Callback, query: HashMap<String, String>?) {
+            var queryString = ""
+            if (query != null) {
+                queryString = "?"
+                for ((key, value) in query) {
+                    queryString += "${key}=${value}&"
+                }
+                queryString = queryString.substring(0, queryString.length - 1)
+            }
+            sendRequest(
                 context,
-                "/api/v1/cervic-model/classifications/",
+                callback = callback,
+                uri = getAPIUri("/api/v1/cervic-model/classifications/${queryString}"),
                 method = HttpMethod.GET,
                 useAuth = true
             )
         }
 
-        fun getClassification(context: Context, requestId: String): Response {
-            return sendRequest(
+        fun getClassification(context: Context, callback: Callback, id: String) {
+            sendRequest(
                 context,
-                "/api/v1/cervic-model/classifications/${requestId}/",
+                callback = callback,
+                uri = getAPIUri("/api/v1/cervic-model/classifications/${id}/"),
                 method = HttpMethod.GET,
                 useAuth = true
             )

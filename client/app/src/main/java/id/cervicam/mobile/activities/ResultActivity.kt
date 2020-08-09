@@ -19,7 +19,10 @@ import kotlinx.android.synthetic.main.activity_result.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.Response
+import java.io.IOException
 
 /**
  * Show classification result
@@ -66,21 +69,36 @@ class ResultActivity : AppCompatActivity() {
      */
     private fun getAndSetResult(requestId: String) = runBlocking {
         launch(Dispatchers.Default) {
-            val response: Response = MainService.getClassification(this@ResultActivity, requestId)
-            runOnUiThread {
-                if (response.code() == 200) {
-                    val body = Utility.parseJSON(response.body()?.string())
-                    Picasso.with(this@ResultActivity)
-                        .load(body["image_url"].toString())
-                        .config(Bitmap.Config.RGB_565)
-                        .into(imageView)
+            MainService.getClassification(
+                this@ResultActivity,
+                id = requestId,
+                callback = object: Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        e.printStackTrace()
+                    }
 
-                    statusTextView.text = (body["status"] as HashMap<*, *>)["label"].toString()
-                    resultTextView.text = (body["result"] as HashMap<*, *>)["label"].toString()
-                } else {
-                    Toast.makeText(this@ResultActivity, "Unable to get the classification, try again later", Toast.LENGTH_LONG).show()
+                    override fun onResponse(call: Call, response: Response) {
+                        if (response.isSuccessful) {
+                            runOnUiThread {
+                                if (response.code() == 200) {
+                                    val body = Utility.parseJSON(response.body()?.string())
+                                    Picasso.with(this@ResultActivity)
+                                        .load(body["image_url"].toString())
+                                        .config(Bitmap.Config.RGB_565)
+                                        .into(imageView)
+
+                                    statusTextView.text = (body["status"] as HashMap<*, *>)["label"].toString()
+                                    resultTextView.text = (body["result"] as HashMap<*, *>)["label"].toString()
+                                } else {
+                                    Toast.makeText(this@ResultActivity, "Unable to get the classification, try again later", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        } else {
+                            Toast.makeText(this@ResultActivity, "Request failed", Toast.LENGTH_LONG).show()
+                        }
+                    }
                 }
-            }
+            )
         }
     }
 

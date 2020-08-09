@@ -3,13 +3,13 @@
 <com.google.android.flexbox.FlexboxLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:flexWrap="nowrap"
     app:justifyContent="flex_start"
     app:alignItems="flex_start"
     app:flexDirection="column">
-
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -29,18 +29,38 @@
     <com.google.android.flexbox.FlexboxLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:layout_flexGrow="1">
+        <ScrollView
+            android:id="@+id/scrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+                android:id="@+id/refresher"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <ListView
+                    android:id="@+id/resultListView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:ignore="NestedScrolling" />
+            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        </ScrollView>
+    </com.google.android.flexbox.FlexboxLayout>
+
+    <com.google.android.flexbox.FlexboxLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         app:layout_flexGrow="0"
         app:justifyContent="center"
-        app:alignItems="center"
-        app:flexDirection="column">
+        app:alignItems="flex_end"
+        android:paddingHorizontal="16dp"
+        app:flexDirection="column"
+        tools:ignore="RtlSymmetry">
         <FrameLayout
             android:id="@+id/openCameraButton"
             android:layout_marginVertical="20dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </com.google.android.flexbox.FlexboxLayout>
-    <ListView
-        android:id="@+id/resultListView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
 </com.google.android.flexbox.FlexboxLayout>
