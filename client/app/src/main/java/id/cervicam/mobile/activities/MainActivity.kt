@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         scrollView.viewTreeObserver
-            .addOnScrollChangedListener(object: ViewTreeObserver.OnScrollChangedListener {
+            .addOnScrollChangedListener(object : ViewTreeObserver.OnScrollChangedListener {
                 override fun onScrollChanged() {
 //                    println("${scrollView.getChildAt(0).height} | ${scrollView.height}")
                     if (scrollView.getChildAt(0).bottom <= scrollView.height + scrollView.scrollY) {
@@ -211,7 +211,7 @@ class MainActivity : AppCompatActivity() {
                     .format(dateParser.parse(obj["created_at"].toString())!!)
 
             classifications.add(
-                Pair<String, String>(
+                Pair(
                     "[${classifications.size + 1}] $name",
                     obj["id"].toString()
                 )

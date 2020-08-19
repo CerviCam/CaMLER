@@ -11,13 +11,13 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
-import com.google.gson.*
+import com.google.gson.Gson
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import id.cervicam.mobile.R
 import id.cervicam.mobile.activities.CameraActivity
 import id.cervicam.mobile.services.MainService
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.readText
-import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -222,12 +222,12 @@ class Utility {
 
         private fun setToken(context: Context, username: String, password: String): Boolean {
             val waitUntilGetResponse = CountDownLatch(1)
-            var foundToken: Boolean = false
+            var foundToken = false
             MainService.getToken(
                 context,
                 username = username,
                 password = password,
-                callback = object: Callback {
+                callback = object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         e.printStackTrace()
                         waitUntilGetResponse.countDown()
@@ -240,7 +240,11 @@ class Utility {
                                 foundToken = try {
                                     (body["non_field_errors"] as ArrayList<*>)[0].toString() != "\"Unable to log in with provided credentials.\""
                                 } catch (e: TypeCastException) {
-                                    LocalStorage.set(context, LocalStorage.PreferenceKeys.TOKEN.value, body["token"].toString())
+                                    LocalStorage.set(
+                                        context,
+                                        LocalStorage.PreferenceKeys.TOKEN.value,
+                                        body["token"].toString()
+                                    )
                                     true
                                 }
                             }
@@ -262,7 +266,7 @@ class Utility {
             var password: String? =
                 LocalStorage.get(context, LocalStorage.PreferenceKeys.PASSWORD.value)
 
-            var shouldCreateUser: Boolean = true
+            var shouldCreateUser = true
             if (username != null && password != null) {
                 shouldCreateUser = !setToken(context, username, password)
             }
@@ -281,7 +285,7 @@ class Utility {
                             name = "${android.os.Build.MODEL} [${username}]",
                             username = username,
                             password = password,
-                            callback = object: Callback {
+                            callback = object : Callback {
                                 override fun onFailure(call: Call, e: IOException) {
                                     e.printStackTrace()
                                     creatingUserIfNecessary.countDown()
@@ -290,11 +294,20 @@ class Utility {
                                 override fun onResponse(call: Call, response: Response) {
                                     if (response.isSuccessful) {
                                         if (response.code() == 201) {
-                                            LocalStorage.set(context, LocalStorage.PreferenceKeys.USERNAME.value, username)
-                                            LocalStorage.set(context, LocalStorage.PreferenceKeys.PASSWORD.value, password)
+                                            LocalStorage.set(
+                                                context,
+                                                LocalStorage.PreferenceKeys.USERNAME.value,
+                                                username
+                                            )
+                                            LocalStorage.set(
+                                                context,
+                                                LocalStorage.PreferenceKeys.PASSWORD.value,
+                                                password
+                                            )
                                         }
                                     } else {
-                                        Toast.makeText(context, "Request failed", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, "Request failed", Toast.LENGTH_LONG)
+                                            .show()
                                     }
                                     creatingUserIfNecessary.countDown()
                                 }
@@ -307,7 +320,8 @@ class Utility {
             }
 
             creatingUserIfNecessary.await()
-            val failToGetToken: Boolean = username != null && password != null && !setToken(context, username, password)
+            val failToGetToken: Boolean =
+                username != null && password != null && !setToken(context, username, password)
 
             if (failToGetToken) {
                 Toast.makeText(context, "Fail to set token", Toast.LENGTH_LONG).show()

@@ -1,21 +1,19 @@
 package id.cervicam.mobile.services
 
-import android.annotation.SuppressLint
 import android.content.Context
 import id.cervicam.mobile.helper.LocalStorage
 import id.cervicam.mobile.helper.Utility
-import kotlinx.coroutines.CoroutineScope
 import okhttp3.*
 import java.io.File
-import java.io.IOException
 
 class MainService {
     enum class HttpMethod(val value: String) {
         GET("GET"),
         POST("POST"),
-        PATCH("PATCH"),
-        DELETE("DELETE")
+//        PATCH("PATCH"),
+//        DELETE("DELETE")
     }
+
     companion object {
         private const val API_DOMAIN = "http://34.101.228.172"
         private const val API_KEY = "28e797c9ffda7b1c85191911ad50b35489a2900e"
@@ -39,7 +37,10 @@ class MainService {
                 .method(method.value, body)
 
             if (useAuth) {
-                rawRequest.header("Authorization", "Token ${LocalStorage.get(context, LocalStorage.PreferenceKeys.TOKEN.value)}")
+                rawRequest.header(
+                    "Authorization",
+                    "Token ${LocalStorage.get(context, LocalStorage.PreferenceKeys.TOKEN.value)}"
+                )
             }
 
             val request: Request = rawRequest.build()
@@ -68,24 +69,25 @@ class MainService {
                 body = RequestBody.create(
                     MediaType.parse("application/json"),
                     Utility.stringifyJSON(
-                    mapOf<String, Any>(
-                        "name" to name,
-                        "account" to mapOf<String, String>(
-                            "username" to username,
-                            "password" to password
-                        ),
-                        "degree" to mapOf<String, String>(
-                            "instance_name" to instanceName,
-                            "name" to degreeName
-                        ),
-                        "workplace" to mapOf<String, String>(
-                            "country" to workplaceCountry,
-                            "province" to workplaceProvince,
-                            "city" to workplaceCity,
-                            "street_name" to workplaceStreetName,
-                            "postal_code" to workplacePostalCode
-                        )
-                    ) as HashMap<String, Any>)
+                        mapOf(
+                            "name" to name,
+                            "account" to mapOf(
+                                "username" to username,
+                                "password" to password
+                            ),
+                            "degree" to mapOf(
+                                "instance_name" to instanceName,
+                                "name" to degreeName
+                            ),
+                            "workplace" to mapOf(
+                                "country" to workplaceCountry,
+                                "province" to workplaceProvince,
+                                "city" to workplaceCity,
+                                "street_name" to workplaceStreetName,
+                                "postal_code" to workplacePostalCode
+                            )
+                        ) as HashMap<String, Any>
+                    )
                 )
             )
         }
@@ -99,10 +101,11 @@ class MainService {
                 body = RequestBody.create(
                     MediaType.parse("application/json"),
                     Utility.stringifyJSON(
-                    mapOf<String, Any>(
-                        "username" to username,
-                        "password" to password
-                    ) as HashMap<String, Any>)
+                        mapOf<String, Any>(
+                            "username" to username,
+                            "password" to password
+                        ) as HashMap<String, Any>
+                    )
                 )
             )
         }
@@ -127,7 +130,11 @@ class MainService {
             )
         }
 
-        fun getAllClassifications(context: Context, callback: Callback, query: HashMap<String, String>?) {
+        fun getAllClassifications(
+            context: Context,
+            callback: Callback,
+            query: HashMap<String, String>?
+        ) {
             var queryString = ""
             if (query != null) {
                 queryString = "?"

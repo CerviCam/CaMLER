@@ -10,10 +10,6 @@ import id.cervicam.mobile.R
 import id.cervicam.mobile.fragments.Button
 import id.cervicam.mobile.helper.Utility
 import id.cervicam.mobile.services.MainService
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.readText
-import io.ktor.http.HttpStatusCode
-import kotlinx.android.synthetic.main.activity_image_preview.*
 import kotlinx.android.synthetic.main.activity_image_preview.imageView
 import kotlinx.android.synthetic.main.activity_result.*
 import kotlinx.coroutines.Dispatchers
@@ -72,7 +68,7 @@ class ResultActivity : AppCompatActivity() {
             MainService.getClassification(
                 this@ResultActivity,
                 id = requestId,
-                callback = object: Callback {
+                callback = object : Callback {
                     override fun onFailure(call: Call, e: IOException) {
                         e.printStackTrace()
                     }
@@ -87,14 +83,21 @@ class ResultActivity : AppCompatActivity() {
                                         .config(Bitmap.Config.RGB_565)
                                         .into(imageView)
 
-                                    statusTextView.text = (body["status"] as HashMap<*, *>)["label"].toString()
-                                    resultTextView.text = (body["result"] as HashMap<*, *>)["label"].toString()
+                                    statusTextView.text =
+                                        (body["status"] as HashMap<*, *>)["label"].toString()
+                                    resultTextView.text =
+                                        (body["result"] as HashMap<*, *>)["label"].toString()
                                 } else {
-                                    Toast.makeText(this@ResultActivity, "Unable to get the classification, try again later", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(
+                                        this@ResultActivity,
+                                        "Unable to get the classification, try again later",
+                                        Toast.LENGTH_LONG
+                                    ).show()
                                 }
                             }
                         } else {
-                            Toast.makeText(this@ResultActivity, "Request failed", Toast.LENGTH_LONG).show()
+                            Toast.makeText(this@ResultActivity, "Request failed", Toast.LENGTH_LONG)
+                                .show()
                         }
                     }
                 }

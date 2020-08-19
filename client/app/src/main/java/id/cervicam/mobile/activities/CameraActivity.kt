@@ -1,16 +1,20 @@
 package id.cervicam.mobile.activities
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.MotionEvent
+import android.view.ViewTreeObserver
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import id.cervicam.mobile.R
@@ -35,8 +39,6 @@ class CameraActivity : AppCompatActivity() {
         private const val REQUEST_PERMISSION_CODE = 101
         private const val IMAGE_GALLERY_REQUEST_CODE = 2001
         private const val IMAGE_PREVIEW_ACTIVITY_REQUEST_CODE = 90
-
-        const val KEY_IMAGE_PATH = "IMAGE_PATH"
     }
 
     private var savedImage: File? = null
@@ -147,6 +149,7 @@ class CameraActivity : AppCompatActivity() {
      * Set all parts of camera in correct order of cycle
      *
      */
+    @SuppressLint("ClickableViewAccessibility")
     private fun setCameraCycles() {
         if (cameraProvider == null || selectedCamera == null || imagePreview == null || imageCapture == null) return
 
@@ -159,6 +162,43 @@ class CameraActivity : AppCompatActivity() {
             // All exception
             Toast.makeText(this, "Something is wrong", Toast.LENGTH_LONG).show()
             e.printStackTrace()
+        }
+
+        // Set tap-to-focus handler
+        cameraView.afterMeasured {
+            cameraView.setOnTouchListener { _, event ->
+                return@setOnTouchListener when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+//                        println("down")
+                        true
+                    }
+                    MotionEvent.ACTION_UP -> {
+//                        println("up")
+                        val factory: MeteringPointFactory = SurfaceOrientedMeteringPointFactory(
+                            cameraView.width.toFloat(), cameraView.height.toFloat()
+                        )
+//                        println("Width ${event.x}")
+//                        println("Width ${event.y}")
+                        val autoFocusPoint = factory.createPoint(event.x, event.y)
+                        try {
+                            camera?.cameraControl?.startFocusAndMetering(
+                                FocusMeteringAction.Builder(
+                                    autoFocusPoint,
+                                    FocusMeteringAction.FLAG_AF
+                                ).apply {
+                                    println("Focus")
+                                    // focus only when the user tap the preview
+                                    disableAutoCancel()
+                                }.build()
+                            )
+                        } catch (e: CameraInfoUnavailableException) {
+                            Toast.makeText(this@CameraActivity, "cannot access camera", Toast.LENGTH_LONG).show()
+                        }
+                        true
+                    }
+                    else -> false // Unhandled event.
+                }
+            }
         }
     }
 
@@ -283,4 +323,15 @@ class CameraActivity : AppCompatActivity() {
             openCamera()
         }
     }
+}
+
+inline fun PreviewView.afterMeasured(crossinline block: () -> Unit) {
+    viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+        override fun onGlobalLayout() {
+            if (measuredWidth > 0 && measuredHeight > 0) {
+                viewTreeObserver.removeOnGlobalLayoutListener(this)
+                block()
+            }
+        }
+    })
 }
